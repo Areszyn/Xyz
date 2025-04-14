@@ -1,17 +1,17 @@
 from flask import Flask, request
 from telegram import Bot, Update, InlineKeyboardMarkup, InlineKeyboardButton, LabeledPrice
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, filters
-import os
 import random
 
-# === CONFIG ===
-BOT_TOKEN = os.environ.get("7504457974:AAG0i7X4GAX_awDH72M1Q9hetaJCR2xfuOw")
-ADMIN_ID = int(os.environ.get("ADMIN_ID", 2114237158))  # Replace with your user ID
+# === HARDCODED CONFIG ===
+BOT_TOKEN = "7504457974:AAG0i7X4GAX_awDH72M1Q9hetaJCR2xfuOw"
+ADMIN_ID = 2114237158  # Replace with your numeric Telegram user ID
+
 bot = Bot(token=BOT_TOKEN)
 app = Flask(__name__)
 dispatcher = Dispatcher(bot=bot, update_queue=None, workers=0)
 
-# === SERVICE NAMES & MESSAGES ===
+# === RANDOM SERVICE NAMES & MESSAGES ===
 SERVICES = [
     "Shadow Proxy Tool", "AI Chat Pro", "Crypto Wallet Guard",
     "StarCleaner X", "Night Vision AI", "Secret Mail Unlocker"
@@ -25,7 +25,7 @@ MESSAGES = [
     "*{service}* runs on stardust. Can you spare some?"
 ]
 
-# === /start ===
+# === /start COMMAND ===
 def start(update: Update, context):
     user = update.effective_user
     service = random.choice(SERVICES)
@@ -39,24 +39,24 @@ def start(update: Update, context):
     bot.send_invoice(
         chat_id=update.message.chat_id,
         title=service,
-        description="Support our work with Telegram Stars",
+        description="Support with Telegram Stars",
         payload="stars-donation",
-        provider_token="STARS",
+        provider_token="STARS",  # Special token for Telegram Stars
         currency="XTR",
         prices=[LabeledPrice("Donation", stars)],
         reply_markup=keyboard,
         start_parameter="donate-stars"
     )
 
-# === Payment successful ===
+# === ON SUCCESSFUL PAYMENT ===
 def successful_payment(update: Update, context):
     bot.send_message(chat_id=update.message.chat_id, text="Thanks for donating!")
 
-# === Register handlers ===
+# === REGISTER HANDLERS ===
 dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
 
-# === Vercel route ===
+# === VERCEL ENTRYPOINT ===
 @app.route("/api/index", methods=["POST"])
 def main():
     update = Update.de_json(request.get_json(force=True), bot)
