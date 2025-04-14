@@ -3,26 +3,25 @@ from telegram import Bot, Update, InlineKeyboardMarkup, InlineKeyboardButton, La
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, filters
 import random
 
-# === HARDCODED CONFIG ===
+# === HARDCODED BOT SETTINGS ===
 BOT_TOKEN = "7504457974:AAG0i7X4GAX_awDH72M1Q9hetaJCR2xfuOw"
-ADMIN_ID = 2114237158  # Replace with your numeric Telegram user ID
+ADMIN_ID = 2114237158
 
-bot = Bot(token=BOT_TOKEN)
+bot = Bot(BOT_TOKEN)
 app = Flask(__name__)
 dispatcher = Dispatcher(bot=bot, update_queue=None, workers=0)
 
-# === RANDOM SERVICE NAMES & MESSAGES ===
+# === Random Names and Messages ===
 SERVICES = [
-    "Shadow Proxy Tool", "AI Chat Pro", "Crypto Wallet Guard",
-    "StarCleaner X", "Night Vision AI", "Secret Mail Unlocker"
+    "StarVision", "GhostVPN", "AnonX Cleaner",
+    "ProPrivacy AI", "MegaMail Unlocker", "Midnight Burner"
 ]
 
 MESSAGES = [
-    "Hey {name}, support *{service}* with some stars!",
-    "Help fund *{service}*!",
-    "Your stars keep *{service}* alive!",
-    "Donate to support *{service}*!",
-    "*{service}* runs on stardust. Can you spare some?"
+    "Hey {name}, support *{service}* with a star!",
+    "Donate to keep *{service}* alive!",
+    "*{service}* needs your spark!",
+    "Drop some stars for *{service}*!"
 ]
 
 # === /start COMMAND ===
@@ -39,26 +38,29 @@ def start(update: Update, context):
     bot.send_invoice(
         chat_id=update.message.chat_id,
         title=service,
-        description="Support with Telegram Stars",
-        payload="stars-donation",
-        provider_token="STARS",  # Special token for Telegram Stars
+        description="Support our service with Telegram Stars",
+        payload="donate_stars",
+        provider_token="STARS",
         currency="XTR",
-        prices=[LabeledPrice("Donation", stars)],
+        prices=[LabeledPrice("Star Support", stars)],
         reply_markup=keyboard,
-        start_parameter="donate-stars"
+        start_parameter="star-donation"
     )
 
-# === ON SUCCESSFUL PAYMENT ===
 def successful_payment(update: Update, context):
-    bot.send_message(chat_id=update.message.chat_id, text="Thanks for donating!")
+    bot.send_message(chat_id=update.message.chat_id, text="Thanks for donating stars!")
 
 # === REGISTER HANDLERS ===
 dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
 
-# === VERCEL ENTRYPOINT ===
+# === VERCEL WEBHOOK ENTRY ===
 @app.route("/api/index", methods=["POST"])
-def main():
-    update = Update.de_json(request.get_json(force=True), bot)
-    dispatcher.process_update(update)
-    return "ok"
+def webhook():
+    try:
+        update = Update.de_json(request.get_json(force=True), bot)
+        dispatcher.process_update(update)
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return "error", 500
+    return "ok", 200
